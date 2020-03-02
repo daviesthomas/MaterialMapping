@@ -9,6 +9,7 @@ Csc2516 Course project repo.
 Facade Dataset: http://cmp.felk.cvut.cz/~tylecr1/facade/  
 Material Editing paper data: https://www.dropbox.com/s/atycd58bnp37gck/Car_21.zip?dl=0  
 Shapenet (geometry only dataset): https://www.shapenet.org/  
+PhotoShape data: https://keunhong.com/publications/photoshape/
 
 ## References
 
