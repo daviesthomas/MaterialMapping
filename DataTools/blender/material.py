@@ -1,4 +1,5 @@
-
+import random
+import json
 
 class Color:
     def __init__(self, R, G, B, A=1.0):
@@ -54,7 +55,7 @@ class PrincipledBSDF:
         # With GGX distribution controls roughness used for transmitted light.
         self.TransmissionRoughness = 0.0
         # Light emission from the surface, like the Emission shader.
-        self.Emission = Color(0.0,0.0,0.0).RGBA()
+        self.Emission = Color(0.0,0.0,0.0)
         # Controls the transparency of the surface, with 1.0 fully opaque.
         self.Alpha = 1.0
 
@@ -76,11 +77,63 @@ class PrincipledBSDF:
         bsdfNode.inputs["IOR"].default_value = self.IOR
         bsdfNode.inputs["Transmission"].default_value = self.Transmission
         bsdfNode.inputs["Transmission Roughness"].default_value = self.TransmissionRoughness
-        bsdfNode.inputs["Emission"].default_value = self.Emission
+        bsdfNode.inputs["Emission"].default_value = self.Emission.RGBA()
         bsdfNode.inputs["Alpha"].default_value = self.Alpha
+
+    def randomize(self):
+        r = lambda: random.random()
+
+        self.BaseColor = Color(r(), r(), r())
+        self.Subsurface = r()   
+        self.SubsurfaceRadius = Color(r(),r(),r())
+        self.SubsurfaceColor = Color(r(), r(), r())
+        self.Metallic = r()
+        self.Specular = r()
+        self.SpecularTint = r()
+        self.Roughness = r()
+        self.Anisotropic = r()
+        self.AnisotropicRotation = r()
+        self.Sheen = r()
+        self.SheenTint = r()
+        self.Clearcoat = r()
+        self.ClearcoatRoughness = r()
+        self.IOR = 1.45
+        self.Transmission = r()
+        self.TransmissionRoughness = r()
+        self.Emission = Color(0.0,0.0,0.0)
+        self.Alpha = 1.0
+
+    def r(self):
+        return random.random()
 
     def save(self, filename):
         ## TODO: write as a json config file? 
-        return -1
+        materialConfig = {
+            'Base Color': self.BaseColor.RGBA(),
+            'Subsurface': self.Subsurface,
+            'Subsurface Radius': self.SubsurfaceRadius.RGB(),
+            'Subsurface Color': self.SubsurfaceColor.RGBA(),
+            'Metallic': self.Metallic,
+            'Specular': self.Specular,
+            'Specular Tint': self.SpecularTint,
+            'Roughness': self.Roughness,
+            'Anisotropic': self.Anisotropic,
+            'Anisotropic Rotation': self.AnisotropicRotation,
+            'Sheen': self.Sheen,
+            'Sheen Tint': self.SheenTint,
+            'Clearcoat': self.Clearcoat,
+            'Clearcout Roughness': self.ClearcoatRoughness,
+            'IOR': self.IOR,
+            'Transmission': self.Transmission,
+            'Transmission Roughness': self.TransmissionRoughness,
+            'Emission': self.Emission.RGBA(),
+            'Alpha': self.Alpha
+        }
+
+        configJson = json.dumps(materialConfig)
+        f = open(filename,"w")
+        f.write(configJson)
+        f.close()
+    
 
 
