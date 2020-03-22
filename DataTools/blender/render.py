@@ -1,10 +1,10 @@
 import bpy
 
 class Render():
-    def __init__(self,resolution_x, resolution_y, numSamples = 128, exposure = 1.5, useBothCPUGPU=False):
+    def __init__(self,resolution_x, resolution_y, numSamples = 256, exposure = 1.5, useBothCPUGPU=False):
         # clear all
-        bpy.ops.wm.read_homefile()
-        bpy.ops.object.select_all(action = 'SELECT')
+        bpy.ops.wm.read_homefile() 
+        bpy.ops.object.select_all(action = 'SELECT') 
         bpy.ops.object.delete() 
         # use cycle
         bpy.context.scene.render.engine = 'CYCLES'
