@@ -5,7 +5,7 @@ import HelperFunctions as hf
 
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, train=True):
         super(Discriminator, self).__init__()
 
         self.discriminator = {
@@ -20,6 +20,12 @@ class Discriminator(nn.Module):
         }
 
         self.network = nn.Sequential(*self.__build_discriminator())
+
+        self.network.apply(hf.initialize_weights)
+
+    def set_requires_grad(self, requires_grad=False):
+        for param in self.network.parameters():
+            param.requires_grad = requires_grad
 
     def forward(self, x):
         """
@@ -83,6 +89,6 @@ class Discriminator(nn.Module):
                                       1,
                                       self.discriminator['padding'],
                                       hf.NormType.BATCH_NORM,
-                                      hf.ActivationType.SIGMOID,
+                                      hf.ActivationType.NONE,
                                       False))
         return blocks
