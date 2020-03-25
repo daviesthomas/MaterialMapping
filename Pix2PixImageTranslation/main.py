@@ -82,10 +82,13 @@ if __name__ == '__main__':
         'parameter_filename': './parameters/parameters.pt',  # Directory to store the network parameters
         'save_parameters': True,  # Set to True to store the trained
         'lr': 0.0002,  # Learning Rate
+        'lr_decay_step': 1, # Learning Rate decay applied every n step (after the regular epochs training)
+        'lr_decay_gamma': 0.25,  # Multiplicative decay rate
         'beta1': (0.5, 0.999),  # Adam Optimizer Parameters
         'lambda_L1': 100.0,  # L1 Regularizer
         'batch_size': 4,  # Batch Size
-        'total_epochs': 2,  # Total epochs to train
+        'total_regular_epochs': 200,  # Total epochs to train
+        'total_decay_epochs': 200,  # Additional epochs to train with learning rate would decay
         'target_real_label': 1.0,  # Numerical value for true label
         'target_forged_label': 0.0,  # Numerical value for false label
 

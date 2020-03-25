@@ -63,6 +63,9 @@ class ImageTranslationModel:
             self.optimizer_D = torch.optim.Adam(self.discriminator.parameters(), lr=self.options['lr'],
                                                 betas=self.options['beta1'])
 
+            self.scheduler_G = torch.optim.lr_scheduler.StepLR(self.optimizer_G, self.options['lr_decay_step'], self.options['lr_decay_gamma'])
+            self.scheduler_D = torch.optim.lr_scheduler.StepLR(self.optimizer_D, self.options['lr_decay_step'], self.options['lr_decay_gamma'])
+
             # self.discriminator_loss = torch.tensor(0.0, dtype=torch.double, requires_grad=True)
             # self.generator_loss = torch.tensor(0.0, dtype=torch.double, requires_grad=True)
 
@@ -120,10 +123,14 @@ class ImageTranslationModel:
 
         validation_losses_generator = []
 
-        for epoch in range(self.options['total_epochs']):
+        for epoch in range(self.options['total_regular_epochs'] + self.options['total_decay_epochs']):
             swatch_start = time.time()
             print(64 * '-')
-            print("Epoch:  {0}/{1}".format(epoch + 1, self.options['total_epochs']))
+            print("Epoch:  {0}/{1}".format(epoch + 1, (self.options['total_regular_epochs'] + self.options['total_decay_epochs'])))
+
+            if self.options['verbose']:
+                print('G LR = %.7f' % self.optimizer_G.param_groups[0]['lr'])
+                print('D LR = %.7f' % self.optimizer_D.param_groups[0]['lr'])
 
             losses_generator = []
             losses_discriminator = []
@@ -200,8 +207,10 @@ class ImageTranslationModel:
             print("\nValidation Loss = {0:.4f}\tBest Validation Loss = {1:.4f}".format(mean_validation_loss,
                                                                                        best_validation_loss))
 
-        # Training for all epochs is complete
-        # Note:  In the original pix2pix training continues for another 200 epochs at a decaying learning rate
+            # Update the learning rates
+            if epoch >= self.options['total_regular_epochs'] - 1:
+                self.scheduler_G.step()
+                self.scheduler_D.step()
 
         # Save the training plots
         UtilityFunctions.save_loss_plot({'Generator': training_losses_generator,
