@@ -21,6 +21,7 @@ class Generator(nn.Module):
         }
 
         blocks = self.__build_generator()
+
         self.encoder1 = nn.Sequential(*blocks[0])
         self.encoder2 = nn.Sequential(*blocks[1])
         self.encoder3 = nn.Sequential(*blocks[2])
@@ -38,6 +39,12 @@ class Generator(nn.Module):
         self.decoder6 = nn.Sequential(*blocks[13])
         self.decoder7 = nn.Sequential(*blocks[14])
         self.decoder8 = nn.Sequential(*blocks[15])
+
+        self.__initialize_generator()
+
+    def set_requires_grad(self, requires_grad=False):
+        for param in self.network.parameters():
+            param.requires_grad = requires_grad
 
     def forward(self, x):
         """
@@ -73,16 +80,15 @@ class Generator(nn.Module):
         :return: None
         """
         n_blocks = self.generator['num_blocks']
-        blocks = []
-        blocks.append(hf.create_block(hf.BlockType.ENCODER,
-                                      self.generator['num_in_channels'],
-                                      64,
-                                      self.generator['kernel_size'],
-                                      self.generator['stride'],
-                                      self.generator['padding'],
-                                      hf.NormType.NONE,
-                                      hf.ActivationType.LEAKY_RELU,
-                                      self.generator['use_dropout']))
+        blocks = [hf.create_block(hf.BlockType.ENCODER,
+                                  self.generator['num_in_channels'],
+                                  64,
+                                  self.generator['kernel_size'],
+                                  self.generator['stride'],
+                                  self.generator['padding'],
+                                  hf.NormType.NONE,
+                                  hf.ActivationType.LEAKY_RELU,
+                                  self.generator['use_dropout'])]
 
         for i in range(1, n_blocks // 2):
             in_channels = min(32 * (2 ** i), self.generator['max_encoder_in_channels'])
@@ -133,3 +139,22 @@ class Generator(nn.Module):
                                       False))
 
         return blocks
+
+    def __initialize_generator(self):
+        self.encoder1.apply(hf.initialize_weights)
+        self.encoder2.apply(hf.initialize_weights)
+        self.encoder3.apply(hf.initialize_weights)
+        self.encoder4.apply(hf.initialize_weights)
+        self.encoder5.apply(hf.initialize_weights)
+        self.encoder6.apply(hf.initialize_weights)
+        self.encoder7.apply(hf.initialize_weights)
+        self.encoder8.apply(hf.initialize_weights)
+
+        self.decoder1.apply(hf.initialize_weights)
+        self.decoder2.apply(hf.initialize_weights)
+        self.decoder3.apply(hf.initialize_weights)
+        self.decoder4.apply(hf.initialize_weights)
+        self.decoder5.apply(hf.initialize_weights)
+        self.decoder6.apply(hf.initialize_weights)
+        self.decoder7.apply(hf.initialize_weights)
+        self.decoder8.apply(hf.initialize_weights)
