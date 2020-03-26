@@ -85,5 +85,8 @@ class Geometry():
         # reset the cursor
         scene.cursor.location = (0,0,0)
 
+    def delete(self):
+        bpy.ops.object.delete()
+
 
     
