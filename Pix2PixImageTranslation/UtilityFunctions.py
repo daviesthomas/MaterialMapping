@@ -46,7 +46,7 @@ def save_tensor_image(image_tensor, image_path, aspect_ratio=1.0):
     :return: None
     """
 
-    img_numpy = image_tensor.numpy()  # convert it into a numpy array
+    img_numpy = image_tensor.cpu().numpy()  # convert it into a numpy array
     img_numpy = img_numpy[0]
 
     # post-processing: transpose and scaling
