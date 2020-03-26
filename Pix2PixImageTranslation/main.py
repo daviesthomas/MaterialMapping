@@ -108,25 +108,9 @@ if __name__ == '__main__':
         'grayscale_output': False
     }
 
-    # There must be a better way to do the following:
     # --------------------------------------------------------------------------------------------------------------
-    # If running the code from CoLab (or Jupyter Notebook):
-    #   Comment the code in the next section
-    #   Uncomment the lines below
-    # --------------------------------------------------------------------------------------------------------------
-    # try:
-    #     arg = sys.argv[1]
-    # except IndexError:
-    #     raise SystemExit(f"Usage: {sys.argv[0]} <args_dict>")
-    #
-    # print(arg)
-    # main(arg)
-    # --------------------------------------------------------------------------------------------------------------
-
-    # --------------------------------------------------------------------------------------------------------------
-    # If running the code from PyCharm (or any other IDE):
-    #   Comment the above section
-    #   Uncomment the lines in this section
+    # If running the code from COLAB:
+    #   Define args_dict dictionary in the code block and pass it the main function as:  main.main(args_dict)
     # --------------------------------------------------------------------------------------------------------------
     main(args_dict)
     # --------------------------------------------------------------------------------------------------------------

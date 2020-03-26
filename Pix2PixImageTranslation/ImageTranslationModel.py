@@ -204,8 +204,8 @@ class ImageTranslationModel:
             mean_validation_loss = np.mean(losses_generator_validation)
             best_validation_loss = mean_validation_loss if mean_validation_loss < best_validation_loss else best_validation_loss
             validation_losses_generator.append(mean_validation_loss)
-            print("\nValidation Loss = {0:.4f}\tBest Validation Loss = {1:.4f}".format(mean_validation_loss,
-                                                                                       best_validation_loss))
+            print("\nValidation Loss = {0:.4f}\tBest Validation Loss = {1:.4f}\n".format(mean_validation_loss,
+                                                                                         best_validation_loss))
 
             # Update the learning rates
             if epoch >= self.options['total_regular_epochs'] - 1:
@@ -220,6 +220,8 @@ class ImageTranslationModel:
 
         # At the end of training, save the generator weights for future evaluation
         if self.options['save_parameters']:
+            parameter_folder = os.path.split(self.options['parameter_filename'])
+            os.mkdir(parameter_folder[0]) if not os.path.exists(parameter_folder[0]) else None
             torch.save(self.generator, self.options['parameter_filename'])
 
     def test(self, test_dataset, direction='A2B'):
@@ -227,6 +229,9 @@ class ImageTranslationModel:
         print(64 * '-')
         print("Generating Test Results...")
         total_tests = len(test_dataset)
+
+        os.mkdir(self.options['results_folder']) if not os.path.exists(self.options['results_folder']) else None
+
         swatch_start = time.time()
         with torch.no_grad():
             self.generator = self.generator.eval()
