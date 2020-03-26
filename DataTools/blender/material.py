@@ -16,8 +16,11 @@ class Color:
 
 #https://docs.blender.org/manual/en/latest/render/shader_nodes/shader/principled.html
 class PrincipledBSDF:
-    def __init__(self):
-        self.setToDefaults()
+    def __init__(self, fp = None):
+        if (fp is None):
+            self.setToDefaults()
+        else:
+            self.load(fp)
 
     def setToDefaults(self):
         # Diffuse or metal surface color.
@@ -86,7 +89,7 @@ class PrincipledBSDF:
         self.BaseColor = Color(r(), r(), r())
         self.Subsurface = r()   
         self.SubsurfaceRadius = Color(r(),r(),r())
-        self.SubsurfaceColor = Color(r(), r(), r())
+        self.SubsurfaceColor = Color(r(), r(), r(), r())
         self.Metallic = r()
         self.Specular = r()
         self.SpecularTint = r()
@@ -130,10 +133,37 @@ class PrincipledBSDF:
             'Alpha': self.Alpha
         }
 
-        configJson = json.dumps(materialConfig)
-        f = open(filename,"w")
-        f.write(configJson)
+        json.dump(materialConfig, filename)
+
+    def load(self, filename):
+        f = open(filename, 'r')
+
+        materialConfig = json.load(f)
+
         f.close()
-    
+
+        c = materialConfig["Base Color"]
+        self.BaseColor = Color(c[0], c[1], c[2], c[3])
+        self.Subsurface = materialConfig["Subsurface"]
+        r = materialConfig["Subsurface Radius"]
+        self.SubsurfaceRadius = Color(r[0], r[1], r[2])
+        c = materialConfig["Subsurface Color"]
+        self.SubsurfaceColor = Color(r[0], r[1], r[2])#, r[3])
+        self.Metallic = materialConfig["Metallic"]
+        self.Specular = materialConfig["Specular"]
+        self.SpecularTint = materialConfig["Specular Tint"]
+        self.Roughness = materialConfig["Roughness"]
+        self.Anisotropic = materialConfig["Anisotropic"]
+        self.AnisotropicRotation = materialConfig["Anisotropic Rotation"]
+        self.Sheen = materialConfig["Sheen"]
+        self.SheenTint = materialConfig["Sheen Tint"]
+        self.Clearcoat = materialConfig["Clearcoat"]
+        self.ClearcoatRoughness = materialConfig["Clearcout Roughness"]
+        self.IOR = materialConfig["IOR"]
+        self.Transmission = materialConfig["Transmission"]
+        self.TransmissionRoughness = materialConfig["Transmission Roughness"]
+        e = materialConfig["Emission"]
+        self.Emission = Color(e[0], e[1], e[2], e[3])
+        self.Alpha = materialConfig["Alpha"]
 
 
