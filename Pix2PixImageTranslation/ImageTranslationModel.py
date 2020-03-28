@@ -141,9 +141,9 @@ class ImageTranslationModel:
                         target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
 
                     # commit forgery: G(input_img) :(
-                    input_img = torch.cat((input_img, material_img), 1) if direction == 'ABC' else input_img
-                    input_img = input_img.to(device=self.device)
-                    forged_img = self.forward(input_img)
+                    generator_input_img = torch.cat((input_img, material_img), 1) if direction == 'ABC' else input_img
+                    generator_input_img = generator_input_img.to(device=self.device)
+                    forged_img = self.forward(generator_input_img)
 
                     # Update Discriminator:
                     # 1. Enable backprop for D
