@@ -25,9 +25,9 @@ def create_block(block_type, in_channels, out_channels, kernel_size, stride, pad
     activation = None
 
     if block_type == BlockType.ENCODER:
-        convolution = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        convolution = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
     elif block_type == BlockType.DECODER:
-        convolution = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding)
+        convolution = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
     else:
         raise Exception('ImageTranslationModel::Unknown Block Type')
 
@@ -90,8 +90,7 @@ def initialize_weights(m):
     if type(m) in [nn.Conv2d, nn.ConvTranspose2d, nn.Linear]:
         # w ~ N(0, 1)*sqrt(1/(fan_in))
         nn.init.kaiming_normal_(m.weight)
-        m.bias.data.fill_(0.0)
     elif type(m) == nn.BatchNorm2d:
         nn.init.normal_(m.weight)
-        m.bias.data.fill_(0.0)
+
 
