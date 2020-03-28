@@ -48,9 +48,6 @@ class ImageTranslationModel:
             self.generator = Pix2PixGenerator.Generator(6 if options['direction'] == 'ABC' else 3)
             self.discriminator = Pix2PixDiscriminator.Discriminator()
 
-            # self.real_label = torch.tensor(self.options['target_real_label'], dtype=torch.double)
-            # self.forged_label = torch.tensor(self.options['target_forged_label'], dtype=torch.double)
-
             self.real_label = torch.tensor(self.options['target_real_label'])
             self.forged_label = torch.tensor(self.options['target_forged_label'])
 
@@ -65,9 +62,6 @@ class ImageTranslationModel:
 
             self.scheduler_G = torch.optim.lr_scheduler.StepLR(self.optimizer_G, self.options['lr_decay_step'], self.options['lr_decay_gamma'])
             self.scheduler_D = torch.optim.lr_scheduler.StepLR(self.optimizer_D, self.options['lr_decay_step'], self.options['lr_decay_gamma'])
-
-            # self.discriminator_loss = torch.tensor(0.0, dtype=torch.double, requires_grad=True)
-            # self.generator_loss = torch.tensor(0.0, dtype=torch.double, requires_grad=True)
 
             self.discriminator_loss = torch.tensor(0.0, requires_grad=True)
             self.generator_loss = torch.tensor(0.0, requires_grad=True)
@@ -147,7 +141,9 @@ class ImageTranslationModel:
                         target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
 
                     # commit forgery: G(input_img) :(
-                    forged_img = self.forward(torch.cat((input_img, material_img), 1)) if direction == 'ABC' else self.forward(input_img)
+                    input_img = torch.cat((input_img, material_img), 1) if direction == 'ABC' else input_img
+                    input_img = input_img.to(device=self.device)
+                    forged_img = self.forward(input_img)
 
                     # Update Discriminator:
                     # 1. Enable backprop for D
