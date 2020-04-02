@@ -5,14 +5,14 @@ import HelperFunctions as hf
 
 
 class Generator(nn.Module):
-    def __init__(self):
+    def __init__(self, num_in_channels):
         super(Generator, self).__init__()
 
         self.generator = {
             'kernel_size': 4,
             'stride': 2,
             'padding': 1,
-            'num_in_channels': 3,
+            'num_in_channels': num_in_channels, #6, #3,   #Original is 3, new experiment with 6 3 input + 3 material
             'num_out_channels': 3,
             'num_blocks': 16,
             'max_encoder_in_channels': 512,

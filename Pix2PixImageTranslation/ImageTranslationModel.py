@@ -45,11 +45,8 @@ class ImageTranslationModel:
             self.device = torch.device('cpu')
 
         if self.options['train']:
-            self.generator = Pix2PixGenerator.Generator()
+            self.generator = Pix2PixGenerator.Generator(6 if options['direction'] == 'ABC' else 3)
             self.discriminator = Pix2PixDiscriminator.Discriminator()
-
-            # self.real_label = torch.tensor(self.options['target_real_label'], dtype=torch.double)
-            # self.forged_label = torch.tensor(self.options['target_forged_label'], dtype=torch.double)
 
             self.real_label = torch.tensor(self.options['target_real_label'])
             self.forged_label = torch.tensor(self.options['target_forged_label'])
@@ -65,9 +62,6 @@ class ImageTranslationModel:
 
             self.scheduler_G = torch.optim.lr_scheduler.StepLR(self.optimizer_G, self.options['lr_decay_step'], self.options['lr_decay_gamma'])
             self.scheduler_D = torch.optim.lr_scheduler.StepLR(self.optimizer_D, self.options['lr_decay_step'], self.options['lr_decay_gamma'])
-
-            # self.discriminator_loss = torch.tensor(0.0, dtype=torch.double, requires_grad=True)
-            # self.generator_loss = torch.tensor(0.0, dtype=torch.double, requires_grad=True)
 
             self.discriminator_loss = torch.tensor(0.0, requires_grad=True)
             self.generator_loss = torch.tensor(0.0, requires_grad=True)
@@ -87,12 +81,12 @@ class ImageTranslationModel:
 
     def backpropagate_discriminator(self, target_img, input_img, forged_img):
         input_img_forged_img = torch.cat((input_img, forged_img), 1)
-        # prediction_of_forgery = self.discriminator(input_img_forged_img.detach()).to(dtype=torch.double)
+
         prediction_of_forgery = self.discriminator(input_img_forged_img.detach())
         loss_forgery = self.compute_loss(prediction_of_forgery, False)
 
         input_img_target_img = torch.cat((input_img, target_img), 1)
-        # prediction_of_real = self.discriminator(input_img_target_img).to(dtype=torch.double)
+
         prediction_of_real = self.discriminator(input_img_target_img)
         loss_real = self.compute_loss(prediction_of_real, True)
 
@@ -101,11 +95,10 @@ class ImageTranslationModel:
 
     def backpropagate_generator(self, target_img, input_img, forged_img):
         input_img_forged_img = torch.cat((input_img, forged_img), 1)
-        # prediction_of_forgery = self.discriminator(input_img_forged_img).to(dtype=torch.double)
+
         prediction_of_forgery = self.discriminator(input_img_forged_img)
 
         loss_generatorGAN = self.compute_loss(prediction_of_forgery, True)
-        # loss_generatorL1 = self.criterionL1(forged_img, target_img).to(dtype=torch.double) * self.options['lambda_L1']
         loss_generatorL1 = self.criterionL1(forged_img, target_img) * self.options['lambda_L1']
 
         # combine loss and calculate gradients
@@ -138,11 +131,19 @@ class ImageTranslationModel:
             total_batches = len(training_dataset) // self.options['batch_size']
             with tqdm(desc='Training', total=total_batches, leave=False, unit='batch', position=0) as progressBar:
                 for i, data in enumerate(training_dataset):
-                    input_img = data['A' if direction == 'A2B' else 'B'].to(self.device)
-                    target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
+                    if direction == 'ABC':
+                        input_img = data['A']
+                        material_img = data['B']
+                        target_img = data['C']
+                    else:
+                        input_img = data['A' if direction == 'A2B' else 'B'].to(self.device)
+                        material_img = None
+                        target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
 
                     # commit forgery: G(input_img) :(
-                    forged_img = self.forward(input_img)
+                    generator_input_img = torch.cat((input_img, material_img), 1) if direction == 'ABC' else input_img
+                    generator_input_img = generator_input_img.to(device=self.device)
+                    forged_img = self.forward(generator_input_img)
 
                     # Update Discriminator:
                     # 1. Enable backprop for D
@@ -187,11 +188,17 @@ class ImageTranslationModel:
                 self.discriminator = self.discriminator.eval()
 
                 for i, data in enumerate(validation_dataset):
-                    input_img = data['A' if direction == 'A2B' else 'B'].to(self.device)
-                    target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
+                    if direction == 'ABC':
+                        input_img = data['A']
+                        material_img = data['B']
+                        target_img = data['C']
+                    else:
+                        input_img = data['A' if direction == 'A2B' else 'B'].to(self.device)
+                        material_img = None
+                        target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
 
                     # commit forgery: G(input_img) :(
-                    forged_img = self.forward(input_img)
+                    forged_img = self.forward(torch.cat((input_img, material_img), 1)) if direction == 'ABC' else self.forward(input_img)
 
                     input_img_forged_img = torch.cat((input_img, forged_img), 1)
                     prediction_of_forgery = self.discriminator(input_img_forged_img)
@@ -238,11 +245,17 @@ class ImageTranslationModel:
 
             with tqdm(desc='Testing', total=total_tests, leave=False, unit='image', position=0) as progressBar:
                 for i, data in enumerate(test_dataset):
-                    input_img = data['A' if direction == 'A2B' else 'B'].to(self.device)
-                    target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
+                    if direction == 'ABC':
+                        input_img = data['A']
+                        material_img = data['B']
+                        target_img = data['C']
+                    else:
+                        input_img = data['A' if direction == 'A2B' else 'B'].to(self.device)
+                        material_img = None
+                        target_img = data['B' if direction == 'A2B' else 'A'].to(self.device)
 
                     # commit forgery: G(input_img) :(
-                    forged_img = self.forward(input_img)
+                    forged_img = self.forward(torch.cat((input_img, material_img), 1)) if direction == 'ABC' else self.forward(input_img)
 
                     # save the results
                     filename = os.path.split(data['A_paths'][0])[1]
@@ -257,7 +270,11 @@ class ImageTranslationModel:
     def print_generator_network_details(self):
         print("Generator Network")
         print(64 * '-')
-        summary(self.generator, (3, 256, 256))
+
+        if self.options['direction'] == 'ABC':
+            summary(self.generator, (6, 256, 256))
+        else:
+            summary(self.generator, (3, 256, 256))
 
     def print_discriminator_network_details(self):
         print("Discriminator Network")

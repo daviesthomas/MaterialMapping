@@ -33,7 +33,7 @@ def main(args):
         print(args)
 
     # Load the training, validation, and test data sets
-    training_data = DataLoader.PairedImageDataSet(image_folder=args['training_data_folder'],
+    training_data = DataLoader.ThreeImageDataSet(image_folder=args['training_data_folder'],
                                                   batch_size=args['batch_size'],
                                                   shuffle=args['shuffle'],
                                                   preprocess_options=args['PreProcessOptions'],
@@ -42,7 +42,7 @@ def main(args):
                                                   grayscale_input=args['grayscale_input'],
                                                   grayscale_output=args['grayscale_output'])
 
-    validation_data = DataLoader.PairedImageDataSet(image_folder=args['validation_data_folder'],
+    validation_data = DataLoader.ThreeImageDataSet(image_folder=args['validation_data_folder'],
                                                     batch_size=args['batch_size'],
                                                     shuffle=args['shuffle'],
                                                     preprocess_options=args['PreProcessOptions'],
@@ -51,7 +51,7 @@ def main(args):
                                                     grayscale_input=args['grayscale_input'],
                                                     grayscale_output=args['grayscale_output'])
 
-    test_data = DataLoader.PairedImageDataSet(image_folder=args['test_data_folder'],
+    test_data = DataLoader.ThreeImageDataSet(image_folder=args['test_data_folder'],
                                               batch_size=1,
                                               shuffle=False,
                                               preprocess_options=ImageTransforms.PreprocessOptions.NONE)
@@ -93,11 +93,11 @@ if __name__ == '__main__':
         'target_forged_label': 0.0,  # Numerical value for false label
 
         # Data file locations.  Set to None if a validation set is not available
-        'training_data_folder': './datasets/facades/train',
-        'validation_data_folder': './datasets/facades/val',
-        'test_data_folder': './datasets/facades/test',
-        'direction': 'B2A',
-        'results_folder': './datasets/facades/results',
+        'training_data_folder': './datasets/squirrel/train',
+        'validation_data_folder': './datasets/squirrel/val',
+        'test_data_folder': './datasets/squirrel/test',
+        'direction': 'ABC',
+        'results_folder': './datasets/squirrel/results',
 
         # Image processing parameters.  These are specific to the Facade dataset
         'PreProcessOptions': ImageTransforms.PreprocessOptions.RESIZE_AND_CROP,
