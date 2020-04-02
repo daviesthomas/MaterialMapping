@@ -2,8 +2,9 @@ import bpy
 import numpy as np
 
 class Scene():
-    def __init__(self):
-        self.invisibleGround(location = (0,0,0), groundSize = 20, shadowBrightness = 0.7)
+    def __init__(self, castShadows = False):
+        if castShadows:
+            self.invisibleGround(location = (0,0,0), groundSize = 20, shadowBrightness = 0.7)
         
     def invisibleGround(self, location = (0,0,0), groundSize = 20, shadowBrightness = 0.7):
         # initialize a ground for shadow
