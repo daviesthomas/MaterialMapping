@@ -1,11 +1,20 @@
+"""
+HelperFunctions.py
+
+Faisal Habib
+March 3, 2020
+
+Description:
+A set of functions to create pix2pix convolution and deconvolution blocks
+"""
 from enum import Enum
 import torch.nn as nn
+
 
 class NormType(Enum):
     NONE = 0,
     BATCH_NORM = 1,
     INSTANCE_NORM = 2
-
 
 class ActivationType(Enum):
     NONE = 0,
@@ -20,14 +29,21 @@ class BlockType(Enum):
     DECODER = 2,
 
 
-def create_block(block_type, in_channels, out_channels, kernel_size, stride, padding, norm_type, activation_type, dropout):
+def create_block(block_type, in_channels, out_channels, kernel_size, stride, padding, norm_type, activation_type,
+                 dropout, spectral_norm):
     convolution = None
     activation = None
 
     if block_type == BlockType.ENCODER:
-        convolution = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
+        if spectral_norm:
+            convolution = nn.utils.spectral_norm(nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False))
+        else:
+            convolution = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
     elif block_type == BlockType.DECODER:
-        convolution = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
+        if spectral_norm:
+            convolution = nn.utils.spectral_norm(nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, bias=False))
+        else:
+            convolution = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
     else:
         raise Exception('ImageTranslationModel::Unknown Block Type')
 
@@ -48,7 +64,7 @@ def create_block(block_type, in_channels, out_channels, kernel_size, stride, pad
         if norm_type == NormType.NONE:
             block = [convolution]
             if activation is not None:
-                block.extend([activation,  nn.Dropout2d(0.5)])
+                block.extend([activation, nn.Dropout2d(0.5)])
             else:
                 block.extend([nn.Dropout2d(0.5)])
 
@@ -65,6 +81,7 @@ def create_block(block_type, in_channels, out_channels, kernel_size, stride, pad
                 block.extend([activation, nn.Dropout2d(0.5)])
             else:
                 block.extend([nn.Dropout2d(0.5)])
+
         else:
             raise Exception('ImageTranslationModel::Unknown Norm Type')
     else:
@@ -82,6 +99,8 @@ def create_block(block_type, in_channels, out_channels, kernel_size, stride, pad
             block = [convolution, nn.InstanceNorm2d(out_channels)]
             if activation is not None:
                 block.extend([activation])
+        else:
+            raise Exception('ImageTranslationModel::Unknown Norm Type')
 
     return block
 
@@ -92,5 +111,3 @@ def initialize_weights(m):
         nn.init.kaiming_normal_(m.weight)
     elif type(m) == nn.BatchNorm2d:
         nn.init.normal_(m.weight)
-
-

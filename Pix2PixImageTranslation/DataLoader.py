@@ -9,7 +9,7 @@ class PairedImageDataSet(torch.utils.data.Dataset):
     __IMG_EXTENSIONS = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP', '.tif',
                         '.TIF', '.tiff', '.TIFF']
 
-    def __init__(self, image_folder, batch_size=4, shuffle=False,
+    def __init__(self, image_folder, batch_size=4, image_channels=3, shuffle=False,
                  preprocess_options=ImageTransforms.PreprocessOptions.RESIZE_AND_CROP,
                  load_size=286, crop_size=256, grayscale_input=False, grayscale_output=False):
 
@@ -17,6 +17,7 @@ class PairedImageDataSet(torch.utils.data.Dataset):
 
         self.image_location = os.path.normpath(image_folder)
         self.batch_size = batch_size
+        self.image_channels = image_channels
         self.shuffle = shuffle
         self.preprocess_options = preprocess_options
         self.load_size = load_size
@@ -75,9 +76,9 @@ class PairedImageDataSet(torch.utils.data.Dataset):
         A_transform = ImageTransforms.get_transform(self.preprocess_options,
                                                     transform_params,
                                                     self.load_size,
-                                                    self.crop_size, self.grayscale_input)
+                                                    self.crop_size, self.image_channels, self.grayscale_input)
         B_transform = ImageTransforms.get_transform(self.preprocess_options, transform_params, self.load_size,
-                                                    self.crop_size, self.grayscale_output)
+                                                    self.crop_size, self.image_channels, self.grayscale_output)
 
         A = A_transform(A)
         B = B_transform(B)
@@ -99,14 +100,15 @@ class PairedImageDataSet(torch.utils.data.Dataset):
 class ThreeImageDataSet(torch.utils.data.Dataset):
     __IMG_EXTENSIONS = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG']
 
-    def __init__(self, image_folder, batch_size=4, shuffle=False,
+    def __init__(self, image_folder, batch_size=4, image_channels=4, shuffle=False,
                  preprocess_options=ImageTransforms.PreprocessOptions.RESIZE_AND_CROP,
                  load_size=286, crop_size=256, grayscale_input=False, grayscale_output=False):
 
-        super(PairedImageDataSet).__init__()
+        super(ThreeImageDataSet).__init__()
 
         self.image_location = os.path.normpath(image_folder)
         self.batch_size = batch_size
+        self.image_channels = image_channels
         self.shuffle = shuffle
         self.preprocess_options = preprocess_options
         self.load_size = load_size
@@ -149,7 +151,8 @@ class ThreeImageDataSet(torch.utils.data.Dataset):
         """
         # read a image given a random integer index
         image_filepath = self.data_files[index]
-        ABC = Image.open(image_filepath).convert('RGB')
+
+        ABC = Image.open(image_filepath).convert('RGB') if self.image_channels == 3 else Image.open(image_filepath).convert('RGBA')
 
         # split ABC image into A, B, and C
         w, h = ABC.size
@@ -165,13 +168,13 @@ class ThreeImageDataSet(torch.utils.data.Dataset):
                                                                  self.crop_size) if self.preprocess_options != ImageTransforms.PreprocessOptions.NONE else None
 
         A_transform = ImageTransforms.get_transform(self.preprocess_options, transform_params, self.load_size,
-                                                    self.crop_size, self.grayscale_input)
+                                                    self.crop_size, self.image_channels, self.grayscale_input)
 
         B_transform = ImageTransforms.get_transform(ImageTransforms.PreprocessOptions.NONE, None, self.load_size,
-                                                    self.crop_size, self.grayscale_output)
+                                                    self.crop_size, self.image_channels, self.grayscale_output)
 
         C_transform = ImageTransforms.get_transform(self.preprocess_options, transform_params, self.load_size,
-                                                    self.crop_size, self.grayscale_output)
+                                                    self.crop_size, self.image_channels, self.grayscale_output)
 
         A = A_transform(A)
         B = B_transform(B)
