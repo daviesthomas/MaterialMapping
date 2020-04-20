@@ -59,8 +59,8 @@ def get_preprocess_params(preprocess_options=PreprocessOptions.NONE, image_size=
     return {'crop_position': (x, y), 'flip': flip}
 
 
-def get_transform(preprocess_options=PreprocessOptions.NONE, params=None, load_size=286, crop_size=256, grayscale=False,
-                  no_flip=False, method=Image.BICUBIC, convert=True):
+def get_transform(preprocess_options=PreprocessOptions.NONE, params=None, load_size=286, crop_size=256,
+                  num_channels=3, grayscale=False, no_flip=False, method=Image.BICUBIC, convert=True):
     """
     Determines all the transforms that have to be applied to images given the options in the parameter list.
     The final image will be a square image.
@@ -69,6 +69,7 @@ def get_transform(preprocess_options=PreprocessOptions.NONE, params=None, load_s
     :param params:  the output of get_preprocess_params
     :param load_size:  a scalar used for resizing the image (to a larger image)
     :param crop_size:  a scalar used for cropping the image
+    :param num_channels:  a scalar used for normalizing tuple length
     :param grayscale:  a boolean that determines if the image has to be converted to a grayscale
     :param no_flip:  a boolean that determines if the image has to be flipped
     :param method:  a type of transform method to apply to images
@@ -91,21 +92,21 @@ def get_transform(preprocess_options=PreprocessOptions.NONE, params=None, load_s
     elif preprocess_options == PreprocessOptions.SCALE_WIDTH_AND_CROP:
         transform_list.append(transforms.Lambda(lambda img: __scale_width(img, load_size, crop_size, method)))
 
-    if preprocess_options == PreprocessOptions.NONE:
-        transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
+    # if preprocess_options == PreprocessOptions.NONE:
+    #     transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
 
     if not no_flip:
-        if params is None:
-            transform_list.append(transforms.RandomHorizontalFlip())
-        elif params['flip']:
-            transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
+        if params is not None:
+            if params['flip']:
+                transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
 
     if convert:
         transform_list += [transforms.ToTensor()]
         if grayscale:
             transform_list += [transforms.Normalize((0.5,), (0.5,))]
         else:
-            transform_list += [transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+            mean_stddev = tuple(0.5 for i in range(num_channels))
+            transform_list += [transforms.Normalize(mean_stddev, mean_stddev)]
 
     return transforms.Compose(transform_list)
 

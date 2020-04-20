@@ -5,18 +5,20 @@ import HelperFunctions as hf
 
 
 class Discriminator(nn.Module):
-    def __init__(self, train=True):
+    def __init__(self, num_in1_channels, num_in2_channels, spectral_norm, material_mapping):
         super(Discriminator, self).__init__()
 
         self.discriminator = {
             'kernel_size': 4,
             'stride': 2,
             'padding': 1,
-            'num_in1_channels': 3,
-            'num_in2_channels': 3,
+            'num_in1_channels': num_in1_channels,
+            'num_in2_channels': num_in2_channels,
             'num_out_channels': 1,
             'num_blocks': 5,
-            'use_dropout': True
+            'use_dropout': True,
+            'material_mapping': material_mapping,
+            'spectral_norm': spectral_norm
         }
 
         self.network = nn.Sequential(*self.__build_discriminator())
@@ -41,54 +43,62 @@ class Discriminator(nn.Module):
 
         :return: list of layers
         """
+
+        num_input_channels = self.discriminator['num_in1_channels'] + self.discriminator['num_in2_channels']
+        num_input_channels += self.discriminator['num_in2_channels'] if self.discriminator['material_mapping'] else 0
+
         blocks = hf.create_block(hf.BlockType.ENCODER,
-                                 self.discriminator['num_in1_channels'] +
-                                 self.discriminator['num_in2_channels'],
-                                 64,
+                                 num_input_channels,
+                                 32 if self.discriminator['material_mapping'] else 64,
                                  self.discriminator['kernel_size'],
                                  self.discriminator['stride'],
                                  self.discriminator['padding'],
                                  hf.NormType.NONE,
                                  hf.ActivationType.LEAKY_RELU,
-                                 self.discriminator['use_dropout'])
+                                 self.discriminator['use_dropout'],
+                                 self.discriminator['spectral_norm'])
 
         blocks.extend(hf.create_block(hf.BlockType.ENCODER,
-                                      64,
-                                      128,
+                                      32 if self.discriminator['material_mapping'] else 64,
+                                      64 if self.discriminator['material_mapping'] else 128,
                                       self.discriminator['kernel_size'],
                                       self.discriminator['stride'],
                                       self.discriminator['padding'],
-                                      hf.NormType.BATCH_NORM,
+                                      hf.NormType.NONE,
                                       hf.ActivationType.LEAKY_RELU,
-                                      self.discriminator['use_dropout']))
+                                      self.discriminator['use_dropout'],
+                                      self.discriminator['spectral_norm']))
 
         blocks.extend(hf.create_block(hf.BlockType.ENCODER,
-                                      128,
-                                      256,
+                                      64 if self.discriminator['material_mapping'] else 128,
+                                      128 if self.discriminator['material_mapping'] else 256,
                                       self.discriminator['kernel_size'],
                                       self.discriminator['stride'],
                                       self.discriminator['padding'],
-                                      hf.NormType.BATCH_NORM,
+                                      hf.NormType.NONE,
                                       hf.ActivationType.LEAKY_RELU,
-                                      self.discriminator['use_dropout']))
+                                      self.discriminator['use_dropout'],
+                                      self.discriminator['spectral_norm']))
 
         blocks.extend(hf.create_block(hf.BlockType.ENCODER,
-                                      256,
-                                      512,
+                                      128 if self.discriminator['material_mapping'] else 256,
+                                      256 if self.discriminator['material_mapping'] else 512,
                                       self.discriminator['kernel_size'],
                                       1,
                                       self.discriminator['padding'],
-                                      hf.NormType.BATCH_NORM,
+                                      hf.NormType.NONE,
                                       hf.ActivationType.LEAKY_RELU,
-                                      self.discriminator['use_dropout']))
+                                      self.discriminator['use_dropout'],
+                                      self.discriminator['spectral_norm']))
 
         blocks.extend(hf.create_block(hf.BlockType.ENCODER,
-                                      512,
+                                      256 if self.discriminator['material_mapping'] else 512,
                                       self.discriminator['num_out_channels'],
                                       self.discriminator['kernel_size'],
                                       1,
                                       self.discriminator['padding'],
-                                      hf.NormType.BATCH_NORM,
+                                      hf.NormType.NONE,
                                       hf.ActivationType.NONE,
-                                      False))
+                                      False,
+                                      self.discriminator['spectral_norm']))
         return blocks
